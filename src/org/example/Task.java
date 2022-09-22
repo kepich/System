@@ -1,5 +1,7 @@
 package org.example;
 
+import static java.lang.Math.min;
+
 public class Task {
     private int estimatedTime;
     private TaskType taskType;
@@ -17,8 +19,15 @@ public class Task {
         return estimatedTime;
     }
 
-    public void tick() {
-        this.estimatedTime--;
+    public int tick() {
+        int res = this.estimatedTime;
+        estimatedTime = 0;
+        return res;
+    }
+
+    public int tick(int time) {
+        estimatedTime -= min(estimatedTime, time);
+        return estimatedTime;
     }
 
     public boolean isCompleted() {

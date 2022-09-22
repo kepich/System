@@ -20,7 +20,8 @@ public class RAM {
         if (processes.isEmpty()) {
             return Optional.empty();
         } else {
-            return Optional.of(processes.poll());
+            processes.add(processes.remove());
+            return Optional.of(processes.peek());
         }
     }
 
@@ -36,10 +37,19 @@ public class RAM {
         return size - processes.stream().map(Process::getSize).reduce(0, Integer::sum) - required >= 0;
     }
 
-    public void updateIO() {
+    public void updateIO(int time) {
         processes.forEach(process -> process.getTempTask().ifPresent(task -> {
             if (task.getTaskType() == TaskType.IO)
-                task.tick();
+                task.tick(time);
         }));
+    }
+
+    @Override
+    public String toString() {
+        String res = "";
+        for (Process process: processes) {
+            res += process.toString() + "\n";
+        }
+        return res;
     }
 }

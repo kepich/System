@@ -7,14 +7,17 @@ import java.util.Optional;
 public class Process {
     private List<Task> tasks = new ArrayList<>();
     private final int size;
+    private final int id;
 
-    public Process(List<Task> tasks, int size) {
+    public Process(List<Task> tasks, int size, int id) {
         this.tasks = tasks;
         this.size = size;
+        this.id = id;
     }
 
-    public Process(int size) {
+    public Process(int size, int id) {
         this.size = size;
+        this.id = id;
     }
 
     public Optional<Task> getTempTask() {
@@ -37,5 +40,18 @@ public class Process {
 
     public int getSize() {
         return size;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        if (this.tasks.isEmpty()) {
+            return "{id=" + id + ": \"" + "COMPLETED" + "\", " + size + "Mb}";
+        } else {
+            return "{id=" + id + ": \"" + this.tasks.get(0).getTaskType() + "\", (estimatedTime: " + this.tasks.get(0).getEstimatedTime() + "), " + size +"Mb}";
+        }
     }
 }
