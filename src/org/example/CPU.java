@@ -18,15 +18,8 @@ public class CPU {
     public CPUReport run(int estimatedTime) {
         while (workTime + idleTime < estimatedTime) {
             if (process == null) {
-                Optional<Process> buf = ram.getNextProcess();
-
-                if (buf.isPresent()) {
-                    // Переключение на готовый процесс
-                    idle("SWITCHING");
-                    process = buf.get();
-                } else {
-                    tryToLoadNewProcess();
-                }
+                process = ram.getNextProcess();
+                idle("SWITCHING");
             } else {
                 Optional<Task> taskOptional = process.getTempTask();
 
@@ -36,7 +29,6 @@ public class CPU {
                         work(task);
                     } else {
                         idle("BLOCKING");
-                        tryToLoadNewProcess();
                         process = null;
                     }
                 } else {
@@ -44,13 +36,10 @@ public class CPU {
                     process = null;
                 }
             }
+
+            taskProvider.tryToGenerateProcess();
         }
         return new CPUReport(workTime, idleTime);
-    }
-
-    private void tryToLoadNewProcess() {
-        idle("LOAD");
-        taskProvider.readNewProcess();
     }
 
     private void unloadProcess() {

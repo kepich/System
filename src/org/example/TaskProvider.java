@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.Optional;
 import java.util.Random;
 
 public class TaskProvider {
@@ -28,7 +29,10 @@ public class TaskProvider {
         this.ram = ram;
     }
 
-    public void readNewProcess() {
+    public void tryToGenerateProcess() {
+        // TODO: Сгенерировать рандомно процессы уровня USER и иногда
+        //       процессы уровня SERVICE и иметь их в одном пуле, чтобы периодически создавать
+
         if (lastGenerated == null) {
             Process process = generateProcess();
             addProcessToRam(process);
@@ -48,7 +52,7 @@ public class TaskProvider {
     }
 
     private Process generateProcess() {
-        Process process = new Process(random.nextInt(MAX_PROC_SIZE - MIN_PROC_SIZE) + MIN_PROC_SIZE, id++);
+        Process process = new Process(random.nextInt(MAX_PROC_SIZE - MIN_PROC_SIZE) + MIN_PROC_SIZE, id++, ProcessLayer.USER);
 
         for(int i = 0; i < random.nextInt(MAX_TASKS - MIN_TASKS) + MIN_TASKS; i++) {
             process.addTask(generateTask());

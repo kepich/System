@@ -5,19 +5,15 @@ import java.util.List;
 import java.util.Optional;
 
 public class Process {
-    private List<Task> tasks = new ArrayList<>();
+    private final List<Task> tasks = new ArrayList<>();
     private final int size;
     private final int id;
+    private final ProcessLayer processLayer;
 
-    public Process(List<Task> tasks, int size, int id) {
-        this.tasks = tasks;
+    public Process(int size, int id, ProcessLayer processLayer) {
         this.size = size;
         this.id = id;
-    }
-
-    public Process(int size, int id) {
-        this.size = size;
-        this.id = id;
+        this.processLayer = processLayer;
     }
 
     public Optional<Task> getTempTask() {
@@ -49,9 +45,13 @@ public class Process {
     @Override
     public String toString() {
         if (this.tasks.isEmpty()) {
-            return "{id=" + id + ": \"" + "COMPLETED" + "\", " + size + "Mb}";
+            return "{id=" + id + ": \"" + "COMPLETED" + "\", " + size + "Mb, " + processLayer.name() + "}";
         } else {
-            return "{id=" + id + ": \"" + this.tasks.get(0).getTaskType() + "\", (estimatedTime: " + this.tasks.get(0).getEstimatedTime() + "), " + size +"Mb}";
+            return "{id=" + id + ": \"" + tasks.get(0).getTaskType() + "\", (estimatedTime: " + tasks.get(0).getEstimatedTime() + "), " + size +"Mb, " + processLayer.name() + "}";
         }
+    }
+
+    public ProcessLayer getProcessLayer() {
+        return processLayer;
     }
 }

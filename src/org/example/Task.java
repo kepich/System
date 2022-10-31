@@ -25,9 +25,8 @@ public class Task {
         return res;
     }
 
-    public int tick(int time) {
+    public void tick(int time) {
         estimatedTime -= min(estimatedTime, time);
-        return estimatedTime;
     }
 
     public boolean isCompleted() {
