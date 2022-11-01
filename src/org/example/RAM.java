@@ -1,16 +1,12 @@
 package org.example;
 
-import java.util.ArrayDeque;
-import java.util.Optional;
-import java.util.Queue;
-
 public class RAM {
     private final int size;
-    private final Queue<Process> processes = new ArrayDeque<>();
-    private final TaskScheduler taskScheduler = new TaskScheduler();
+    private final TaskScheduler taskScheduler;
 
-    public RAM(int size) {
+    public RAM(int size, TaskScheduler taskScheduler) {
         this.size = size;
+        this.taskScheduler = taskScheduler;
     }
 
     public void removeProcess(Process process) {
@@ -29,8 +25,12 @@ public class RAM {
         }
     }
 
+    public boolean isServiceLoaded(int id) {
+        return taskScheduler.isServiceLoaded(id);
+    }
+
     private boolean isEnoughMemory(int required) {
-        return size - taskScheduler.memoryLoaded() - required >= 0;
+        return size - taskScheduler.getUsedMemorySize() - required >= 0;
     }
 
     public void updateIO(int time) {

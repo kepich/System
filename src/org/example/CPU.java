@@ -3,6 +3,7 @@ package org.example;
 import java.util.Optional;
 
 public class CPU {
+    private final int WINDOW_SIZE;
     private int workTime = 0;
     private int idleTime = 0;
 
@@ -10,52 +11,65 @@ public class CPU {
     private final TaskProvider taskProvider;
     private Process process = null;
 
-    public CPU(RAM ram, TaskProvider taskProvider) {
+    public CPU(RAM ram, TaskProvider taskProvider, int windowSize) {
         this.ram = ram;
         this.taskProvider = taskProvider;
+        this.WINDOW_SIZE = windowSize;
     }
 
     public CPUReport run(int estimatedTime) {
-        while (workTime + idleTime < estimatedTime) {
-            if (process == null) {
-                process = ram.getNextProcess();
-                idle("SWITCHING");
-            } else {
-                Optional<Task> taskOptional = process.getTempTask();
+        initSystem();
 
-                if (taskOptional.isPresent()) {
-                    Task task = taskOptional.get();
-                    if (task.getTaskType() == TaskType.CALCULATION) {
-                        work(task);
-                    } else {
-                        idle("BLOCKING");
-                        process = null;
-                    }
-                } else {
-                    unloadProcess();
-                    process = null;
-                }
+        process = ram.getNextProcess();
+        idle("SWITCHING");
+
+        while (workTime + idleTime < estimatedTime) {
+            Optional<Task> taskOptional = process.getTempTask();
+
+            if (taskOptional.isPresent()) {
+                Task task = taskOptional.get();
+                if (task.getTaskType() == TaskType.CALCULATION)
+                    work(task);
+                else
+                    idle("BLOCKING & SWITCHING");
+            } else {
+                unloadProcess(process);
             }
 
             taskProvider.tryToGenerateProcess();
+
+            process = ram.getNextProcess();
+            idle("");
         }
+
         return new CPUReport(workTime, idleTime);
     }
 
-    private void unloadProcess() {
+    private void initSystem() {
+        // INIT SYSTEM
+        System.out.println("Load OS");
+        taskProvider.generateOSProcesses();
+
+        System.out.println("Load SERVICES");
+        taskProvider.generateServicesProcesses();
+    }
+
+    private void unloadProcess(Process process) {
         idle("UNLOAD");
         ram.removeProcess(process);
     }
 
     private void work(Task task) {
         printState("CALCULATION");
-        int taskTime = task.tick();
-        ram.updateIO(taskTime);
-        workTime += taskTime;
+        task.tick(WINDOW_SIZE);
+        ram.updateIO(WINDOW_SIZE);
+        workTime += WINDOW_SIZE;
     }
 
     private void idle(String state) {
-        printState(state);
+        if (!state.isEmpty()) {
+            printState(state);
+        }
         ram.updateIO(1);
         idleTime++;
     }

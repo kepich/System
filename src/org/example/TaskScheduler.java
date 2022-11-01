@@ -1,14 +1,17 @@
 package org.example;
 
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Queue;
 
 import static org.example.ProcessLayer.IDLE;
 import static org.example.ProcessLayer.OS;
+import static org.example.ProcessLayer.SERVICE;
+import static org.example.ProcessLayer.USER;
 
 public class TaskScheduler {
-    private final Process idleProcess = new Process(1, -1, ProcessLayer.IDLE);
+    private final Process idleProcess = new Process(1, -99, ProcessLayer.IDLE);
     private final Queue<Process> userLayer = new ArrayDeque<>();
     private final Queue<Process> serviceLayer = new ArrayDeque<>();
     private final Queue<Process> coreLayer = new ArrayDeque<>();
@@ -18,20 +21,21 @@ public class TaskScheduler {
         switch (process.getProcessLayer()) {
             case SERVICE -> serviceLayer.remove(process);
             case USER -> userLayer.remove(process);
+            case IDLE -> {}
             default -> System.out.println("Invalid operation! Cannot UNLOAD process: " + process);
         }
     }
 
     public void add(Process process) {
         switch (process.getProcessLayer()) {
-            case SERVICE -> serviceLayer.remove(process);
-            case USER -> userLayer.remove(process);
-            case OS -> coreLayer.remove(process);
+            case SERVICE -> serviceLayer.add(process);
+            case USER -> userLayer.add(process);
+            case OS -> coreLayer.add(process);
             default -> System.out.println("Invalid operation! Cannot LOAD process: " + process);
         }
     }
 
-    public int memoryLoaded() {
+    public int getUsedMemorySize() {
         return userLayer.stream().map(Process::getSize).reduce(0, Integer::sum) +
                 serviceLayer.stream().map(Process::getSize).reduce(0, Integer::sum) +
                 coreLayer.stream().map(Process::getSize).reduce(0, Integer::sum) +
@@ -59,20 +63,21 @@ public class TaskScheduler {
     @Override
     public String toString() {
         return printProcessList(coreLayer, OS.name()) +
-                printProcessList(serviceLayer, OS.name()) +
-                printProcessList(userLayer, OS.name()) +
+                printProcessList(serviceLayer, SERVICE.name()) +
+                printProcessList(userLayer, USER.name()) +
                 IDLE.name() + "\n" + printProcess(idleProcess);
     }
 
-    public String printProcessList(Queue<Process> userLayer, String layerName) {
+    public String printProcessList(Queue<Process> processLayer, String layerName) {
         String res = layerName + "\n";
-        for (Process process : userLayer) {
+
+        for (Process process : processLayer.stream().sorted(Comparator.comparingInt(Process::getId)).toList()) {
             res += printProcess(process);
         }
         return res;
     }
 
-    public String printProcess(Process process) {
+    private String printProcess(Process process) {
         return "\t" + process.toString() + "\n";
     }
 
@@ -89,14 +94,18 @@ public class TaskScheduler {
             Process process = processes.remove();
             processes.add(process);
 
-            if (process.getTempTask().isPresent() && process.getTempTask().get().getTaskType() != TaskType.IO) {
+            if (process.getTempTask().isEmpty() || process.getTempTask().get().getTaskType() != TaskType.IO) {
                 return Optional.of(process);
             }
         }
-        return  Optional.empty();
+        return Optional.empty();
     }
 
     public Process getIdle() {
         return idleProcess;
+    }
+
+    public boolean isServiceLoaded(int serviceId) {
+        return serviceLayer.stream().anyMatch(proc -> proc.getId() == serviceId);
     }
 }
